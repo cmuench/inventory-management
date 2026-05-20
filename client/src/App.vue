@@ -3,30 +3,91 @@
     <header class="top-nav">
       <div class="nav-container">
         <div class="logo">
-          <h1>{{ t('nav.companyName') }}</h1>
-          <span class="subtitle">{{ t('nav.subtitle') }}</span>
+          <h1>{{ t("nav.companyName") }}</h1>
+          <span class="subtitle">{{ t("nav.subtitle") }}</span>
         </div>
         <nav class="nav-tabs">
           <router-link to="/" :class="{ active: $route.path === '/' }">
-            {{ t('nav.overview') }}
+            {{ t("nav.overview") }}
           </router-link>
-          <router-link to="/inventory" :class="{ active: $route.path === '/inventory' }">
-            {{ t('nav.inventory') }}
+          <router-link
+            to="/inventory"
+            :class="{ active: $route.path === '/inventory' }"
+          >
+            {{ t("nav.inventory") }}
           </router-link>
-          <router-link to="/orders" :class="{ active: $route.path === '/orders' }">
-            {{ t('nav.orders') }}
+          <router-link
+            to="/orders"
+            :class="{ active: $route.path === '/orders' }"
+          >
+            {{ t("nav.orders") }}
           </router-link>
-          <router-link to="/spending" :class="{ active: $route.path === '/spending' }">
-            {{ t('nav.finance') }}
+          <router-link
+            to="/spending"
+            :class="{ active: $route.path === '/spending' }"
+          >
+            {{ t("nav.finance") }}
           </router-link>
-          <router-link to="/demand" :class="{ active: $route.path === '/demand' }">
-            {{ t('nav.demandForecast') }}
+          <router-link
+            to="/demand"
+            :class="{ active: $route.path === '/demand' }"
+          >
+            {{ t("nav.demandForecast") }}
           </router-link>
-          <router-link to="/reports" :class="{ active: $route.path === '/reports' }">
+          <router-link
+            to="/reports"
+            :class="{ active: $route.path === '/reports' }"
+          >
             Reports
           </router-link>
         </nav>
         <LanguageSwitcher />
+
+        <!-- Dark mode toggle: moon icon in light mode, sun icon in dark mode -->
+        <button
+          class="dark-mode-toggle"
+          @click="toggleDarkMode"
+          :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+          :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+        >
+          <!-- Moon — visible in light mode -->
+          <svg
+            v-if="!isDark"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+          <!-- Sun — visible in dark mode -->
+          <svg
+            v-else
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+        </button>
+
         <ProfileMenu
           @show-profile-details="showProfileDetails = true"
           @show-tasks="showTasks = true"
@@ -55,113 +116,190 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue'
-import { api } from './api'
-import { useAuth } from './composables/useAuth'
-import { useI18n } from './composables/useI18n'
-import FilterBar from './components/FilterBar.vue'
-import ProfileMenu from './components/ProfileMenu.vue'
-import ProfileDetailsModal from './components/ProfileDetailsModal.vue'
-import TasksModal from './components/TasksModal.vue'
-import LanguageSwitcher from './components/LanguageSwitcher.vue'
+import { ref, onMounted, computed } from "vue";
+import { api } from "./api";
+import { useAuth } from "./composables/useAuth";
+import { useI18n } from "./composables/useI18n";
+import { useDarkMode } from "./composables/useDarkMode";
+import FilterBar from "./components/FilterBar.vue";
+import ProfileMenu from "./components/ProfileMenu.vue";
+import ProfileDetailsModal from "./components/ProfileDetailsModal.vue";
+import TasksModal from "./components/TasksModal.vue";
+import LanguageSwitcher from "./components/LanguageSwitcher.vue";
 
 export default {
-  name: 'App',
+  name: "App",
   components: {
     FilterBar,
     ProfileMenu,
     ProfileDetailsModal,
     TasksModal,
-    LanguageSwitcher
+    LanguageSwitcher,
   },
   setup() {
-    const { currentUser } = useAuth()
-    const { t } = useI18n()
-    const showProfileDetails = ref(false)
-    const showTasks = ref(false)
-    const apiTasks = ref([])
+    const { currentUser } = useAuth();
+    const { t } = useI18n();
+    const { isDark, toggle: toggleDarkMode } = useDarkMode();
+    const showProfileDetails = ref(false);
+    const showTasks = ref(false);
+    const apiTasks = ref([]);
 
     // Merge mock tasks from currentUser with API tasks
     const tasks = computed(() => {
-      return [...currentUser.value.tasks, ...apiTasks.value]
-    })
+      return [...currentUser.value.tasks, ...apiTasks.value];
+    });
 
     const loadTasks = async () => {
       try {
-        apiTasks.value = await api.getTasks()
+        apiTasks.value = await api.getTasks();
       } catch (err) {
-        console.error('Failed to load tasks:', err)
+        console.error("Failed to load tasks:", err);
       }
-    }
+    };
 
     const addTask = async (taskData) => {
       try {
-        const newTask = await api.createTask(taskData)
+        const newTask = await api.createTask(taskData);
         // Add new task to the beginning of the array
-        apiTasks.value.unshift(newTask)
+        apiTasks.value.unshift(newTask);
       } catch (err) {
-        console.error('Failed to add task:', err)
+        console.error("Failed to add task:", err);
       }
-    }
+    };
 
     const deleteTask = async (taskId) => {
       try {
         // Check if it's a mock task (from currentUser)
-        const isMockTask = currentUser.value.tasks.some(t => t.id === taskId)
+        const isMockTask = currentUser.value.tasks.some((t) => t.id === taskId);
 
         if (isMockTask) {
           // Remove from mock tasks
-          const index = currentUser.value.tasks.findIndex(t => t.id === taskId)
+          const index = currentUser.value.tasks.findIndex(
+            (t) => t.id === taskId,
+          );
           if (index !== -1) {
-            currentUser.value.tasks.splice(index, 1)
+            currentUser.value.tasks.splice(index, 1);
           }
         } else {
           // Remove from API tasks
-          await api.deleteTask(taskId)
-          apiTasks.value = apiTasks.value.filter(t => t.id !== taskId)
+          await api.deleteTask(taskId);
+          apiTasks.value = apiTasks.value.filter((t) => t.id !== taskId);
         }
       } catch (err) {
-        console.error('Failed to delete task:', err)
+        console.error("Failed to delete task:", err);
       }
-    }
+    };
 
     const toggleTask = async (taskId) => {
       try {
         // Check if it's a mock task (from currentUser)
-        const mockTask = currentUser.value.tasks.find(t => t.id === taskId)
+        const mockTask = currentUser.value.tasks.find((t) => t.id === taskId);
 
         if (mockTask) {
           // Toggle mock task status
-          mockTask.status = mockTask.status === 'pending' ? 'completed' : 'pending'
+          mockTask.status =
+            mockTask.status === "pending" ? "completed" : "pending";
         } else {
           // Toggle API task
-          const updatedTask = await api.toggleTask(taskId)
-          const index = apiTasks.value.findIndex(t => t.id === taskId)
+          const updatedTask = await api.toggleTask(taskId);
+          const index = apiTasks.value.findIndex((t) => t.id === taskId);
           if (index !== -1) {
-            apiTasks.value[index] = updatedTask
+            apiTasks.value[index] = updatedTask;
           }
         }
       } catch (err) {
-        console.error('Failed to toggle task:', err)
+        console.error("Failed to toggle task:", err);
       }
-    }
+    };
 
-    onMounted(loadTasks)
+    onMounted(loadTasks);
 
     return {
       t,
+      isDark,
+      toggleDarkMode,
       showProfileDetails,
       showTasks,
       tasks,
       addTask,
       deleteTask,
-      toggleTask
-    }
-  }
-}
+      toggleTask,
+    };
+  },
+};
 </script>
 
 <style>
+/* ─── CSS Custom Properties ─────────────────────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg-page: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-nav: #ffffff;
+  --bg-filter-bar: #f8fafc;
+  --bg-table-head: #f8fafc;
+  --bg-row-hover: #f8fafc;
+  --bg-input: #ffffff;
+  --bg-dropdown-header: #f8fafc;
+
+  /* Text */
+  --text-primary: #1e293b;
+  --text-heading: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #475569;
+  --text-body: #334155;
+
+  /* Borders */
+  --border-default: #e2e8f0;
+  --border-subtle: #f1f5f9;
+  --border-input: #cbd5e1;
+
+  /* Nav */
+  --nav-active-color: #2563eb;
+  --nav-active-bg: #eff6ff;
+  --nav-hover-bg: #f1f5f9;
+  --nav-hover-color: #0f172a;
+
+  /* Toggle */
+  --toggle-bg: #ffffff;
+  --toggle-color: #64748b;
+  --toggle-border: #e2e8f0;
+  --toggle-hover-bg: #f1f5f9;
+}
+
+/* ─── Dark Mode Overrides ───────────────────────────────────────────────── */
+html.dark {
+  --bg-page: #0f172a;
+  --bg-card: #1e293b;
+  --bg-nav: #1e293b;
+  --bg-filter-bar: #0f172a;
+  --bg-table-head: #0f172a;
+  --bg-row-hover: #273549;
+  --bg-input: #1e293b;
+  --bg-dropdown-header: #0f172a;
+
+  --text-primary: #f1f5f9;
+  --text-heading: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #94a3b8;
+  --text-body: #cbd5e1;
+
+  --border-default: #334155;
+  --border-subtle: #1e293b;
+  --border-input: #475569;
+
+  --nav-active-color: #60a5fa;
+  --nav-active-bg: #1e3a5f;
+  --nav-hover-bg: #273549;
+  --nav-hover-color: #f1f5f9;
+
+  --toggle-bg: #1e293b;
+  --toggle-color: #94a3b8;
+  --toggle-border: #334155;
+  --toggle-hover-bg: #273549;
+}
+
+/* ─── Base Reset ────────────────────────────────────────────────────────── */
 * {
   margin: 0;
   padding: 0;
@@ -169,11 +307,23 @@ export default {
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background: #f8fafc;
-  color: #1e293b;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .app {
@@ -182,13 +332,17 @@ body {
   min-height: 100vh;
 }
 
+/* ─── Top Nav ───────────────────────────────────────────────────────────── */
 .top-nav {
-  background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--bg-nav);
+  border-bottom: 1px solid var(--border-default);
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
   position: sticky;
   top: 0;
   z-index: 100;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .nav-container {
@@ -218,16 +372,16 @@ body {
 .logo h1 {
   font-size: 1.375rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-heading);
   letter-spacing: -0.025em;
 }
 
 .subtitle {
   font-size: 0.813rem;
-  color: #64748b;
+  color: var(--text-secondary);
   font-weight: 400;
   padding-left: 0.75rem;
-  border-left: 1px solid #e2e8f0;
+  border-left: 1px solid var(--border-default);
 }
 
 .nav-tabs {
@@ -237,7 +391,7 @@ body {
 
 .nav-tabs a {
   padding: 0.625rem 1.25rem;
-  color: #64748b;
+  color: var(--text-secondary);
   text-decoration: none;
   font-weight: 500;
   font-size: 0.938rem;
@@ -247,25 +401,49 @@ body {
 }
 
 .nav-tabs a:hover {
-  color: #0f172a;
-  background: #f1f5f9;
+  color: var(--nav-hover-color);
+  background: var(--nav-hover-bg);
 }
 
 .nav-tabs a.active {
-  color: #2563eb;
-  background: #eff6ff;
+  color: var(--nav-active-color);
+  background: var(--nav-active-bg);
 }
 
 .nav-tabs a.active::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -1px;
   left: 0;
   right: 0;
   height: 2px;
-  background: #2563eb;
+  background: var(--nav-active-color);
 }
 
+/* ─── Dark Mode Toggle Button ───────────────────────────────────────────── */
+.dark-mode-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-right: 0.75rem;
+  background: var(--toggle-bg);
+  border: 1px solid var(--toggle-border);
+  border-radius: 8px;
+  color: var(--toggle-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.dark-mode-toggle:hover {
+  background: var(--toggle-hover-bg);
+  color: var(--text-heading);
+  border-color: var(--border-input);
+}
+
+/* ─── Main Content ──────────────────────────────────────────────────────── */
 .main-content {
   flex: 1;
   max-width: 1600px;
@@ -274,6 +452,7 @@ body {
   padding: 1.5rem 2rem;
 }
 
+/* ─── Page Header ───────────────────────────────────────────────────────── */
 .page-header {
   margin-bottom: 1.5rem;
 }
@@ -281,16 +460,17 @@ body {
 .page-header h2 {
   font-size: 1.875rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-heading);
   margin-bottom: 0.375rem;
   letter-spacing: -0.025em;
 }
 
 .page-header p {
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 0.938rem;
 }
 
+/* ─── Stats Grid ────────────────────────────────────────────────────────── */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -299,20 +479,20 @@ body {
 }
 
 .stat-card {
-  background: white;
+  background: var(--bg-card);
   padding: 1.25rem;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-default);
   transition: all 0.2s ease;
 }
 
 .stat-card:hover {
-  border-color: #cbd5e1;
+  border-color: var(--border-input);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .stat-label {
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 0.875rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -323,7 +503,7 @@ body {
 .stat-value {
   font-size: 2.25rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-heading);
   letter-spacing: -0.025em;
 }
 
@@ -343,12 +523,16 @@ body {
   color: #2563eb;
 }
 
+/* ─── Card ──────────────────────────────────────────────────────────────── */
 .card {
-  background: white;
+  background: var(--bg-card);
   border-radius: 10px;
   padding: 1.25rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-default);
   margin-bottom: 1.25rem;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .card-header {
@@ -357,16 +541,17 @@ body {
   align-items: center;
   margin-bottom: 1rem;
   padding-bottom: 0.875rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .card-title {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-heading);
   letter-spacing: -0.025em;
 }
 
+/* ─── Table ─────────────────────────────────────────────────────────────── */
 .table-container {
   overflow-x: auto;
 }
@@ -377,16 +562,16 @@ table {
 }
 
 thead {
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--bg-table-head);
+  border-top: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--border-default);
 }
 
 th {
   text-align: left;
   padding: 0.5rem 0.75rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--text-muted);
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -394,8 +579,8 @@ th {
 
 td {
   padding: 0.5rem 0.75rem;
-  border-top: 1px solid #f1f5f9;
-  color: #334155;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-body);
   font-size: 0.875rem;
 }
 
@@ -404,9 +589,10 @@ tbody tr {
 }
 
 tbody tr:hover {
-  background: #f8fafc;
+  background: var(--bg-row-hover);
 }
 
+/* ─── Badges ────────────────────────────────────────────────────────────── */
 .badge {
   display: inline-block;
   padding: 0.313rem 0.75rem;
@@ -467,10 +653,11 @@ tbody tr:hover {
   color: #1e40af;
 }
 
+/* ─── Loading / Error ───────────────────────────────────────────────────── */
 .loading {
   text-align: center;
   padding: 3rem;
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 0.938rem;
 }
 
