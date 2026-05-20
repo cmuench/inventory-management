@@ -1,5 +1,52 @@
 <template>
   <div class="orders">
+    <div class="restocking-section">
+      <div class="restocking-header" @click="showRestocking = !showRestocking">
+        <span class="restocking-title">Submitted Restocking Orders</span>
+        <span class="restocking-badge" v-if="restockingOrders.length > 0">{{ restockingOrders.length }}</span>
+        <span class="restocking-chevron" :class="{ open: showRestocking }">&#9658;</span>
+      </div>
+      <div v-show="showRestocking" class="restocking-body">
+        <div v-if="restockingOrders.length === 0" class="restocking-empty">
+          No restocking orders submitted yet.
+        </div>
+        <div v-else class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 180px">Order Number</th>
+                <th style="width: 200px">Items</th>
+                <th style="width: 120px">Status</th>
+                <th style="width: 160px">Submitted</th>
+                <th style="width: 160px">Expected Delivery</th>
+                <th style="width: 130px">Total Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="order in restockingOrders" :key="order.id">
+                <td><strong>{{ order.order_number }}</strong></td>
+                <td>
+                  <details class="items-details">
+                    <summary class="items-summary">{{ order.items.length }} item{{ order.items.length !== 1 ? 's' : '' }}</summary>
+                    <div class="items-dropdown">
+                      <div v-for="item in order.items" :key="item.item_sku" class="item-entry">
+                        <span class="item-name">{{ item.item_name }}</span>
+                        <span class="item-meta">{{ item.quantity }} &times; {{ formatCurrency(item.unit_cost) }}</span>
+                      </div>
+                    </div>
+                  </details>
+                </td>
+                <td><span class="badge info">Processing</span></td>
+                <td>{{ formatDate(order.order_date) }}</td>
+                <td>{{ formatDate(order.expected_delivery) }}</td>
+                <td><strong>{{ formatCurrency(order.total_value) }}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div class="page-header">
       <h2>{{ t('orders.title') }}</h2>
       <p>{{ t('orders.description') }}</p>
@@ -96,6 +143,19 @@ export default {
     const error = ref(null)
     const orders = ref([])
 
+    // Restocking orders are global — not affected by page filters
+    const restockingOrders = ref([])
+    const showRestocking = ref(true)
+
+    const loadRestockingOrders = async () => {
+      try {
+        restockingOrders.value = await api.getRestockingOrders()
+      } catch (err) {
+        // Non-fatal: restocking panel stays empty if endpoint unavailable
+        console.error('Failed to load restocking orders:', err)
+      }
+    }
+
     // Use shared filters
     const {
       selectedPeriod,
@@ -153,7 +213,13 @@ export default {
       })
     }
 
-    onMounted(loadOrders)
+    const formatCurrency = (value) =>
+      value.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+
+    onMounted(() => {
+      loadOrders()
+      loadRestockingOrders()
+    })
 
     return {
       t,
@@ -163,9 +229,13 @@ export default {
       getOrdersByStatus,
       getOrderStatusClass,
       formatDate,
+      formatCurrency,
       currencySymbol,
       translateProductName,
-      translateCustomerName
+      translateCustomerName,
+      restockingOrders,
+      showRestocking,
+      loadRestockingOrders
     }
   }
 }
@@ -275,5 +345,66 @@ export default {
 .item-meta {
   font-size: 0.813rem;
   color: #64748b;
+}
+
+/* Restocking section */
+.restocking-section {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+}
+
+.restocking-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid transparent;
+  transition: background 0.15s ease;
+}
+
+.restocking-header:hover {
+  background: #f8fafc;
+}
+
+.restocking-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.restocking-badge {
+  background: #dbeafe;
+  color: #1e40af;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+}
+
+.restocking-chevron {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: #64748b;
+  transition: transform 0.2s ease;
+}
+
+.restocking-chevron.open {
+  transform: rotate(90deg);
+}
+
+.restocking-body {
+  border-top: 1px solid #e2e8f0;
+}
+
+.restocking-empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.875rem;
 }
 </style>
