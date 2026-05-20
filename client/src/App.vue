@@ -313,24 +313,6 @@ html.dark {
 }
 
 body {
-<<<<<<< HEAD
-  font-family:
-    "Inter",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    sans-serif;
-  background: #f8fafc;
-  color: #1e293b;
-||||||| parent of 2c6a773 (feat(ui): add dark mode toggle with CSS custom properties and localStorage persistence)
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background: #f8fafc;
-  color: #1e293b;
-=======
   font-family:
     "Inter",
     -apple-system,
@@ -343,7 +325,6 @@ body {
     sans-serif;
   background: var(--bg-page);
   color: var(--text-primary);
->>>>>>> 2c6a773 (feat(ui): add dark mode toggle with CSS custom properties and localStorage persistence)
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition:
