@@ -382,6 +382,55 @@ def get_restocking_orders():
     """Get all submitted restocking orders (in-memory, cleared on server restart)."""
     return restocking_orders
 
+
+# --- Tasks ---
+
+class Task(BaseModel):
+    id: str
+    title: str
+    completed: bool = False
+    created_at: str
+
+class CreateTaskRequest(BaseModel):
+    title: str
+
+_tasks: list = []
+_task_counter = [0]
+
+@app.get("/api/tasks", response_model=List[Task])
+def get_tasks():
+    return _tasks
+
+@app.post("/api/tasks", response_model=Task)
+def create_task(req: CreateTaskRequest):
+    _task_counter[0] += 1
+    task = {
+        "id": f"task-{_task_counter[0]}",
+        "title": req.title,
+        "completed": False,
+        "created_at": datetime.utcnow().isoformat(),
+    }
+    _tasks.append(task)
+    return task
+
+@app.delete("/api/tasks/{task_id}")
+def delete_task(task_id: str):
+    global _tasks
+    original_len = len(_tasks)
+    _tasks = [t for t in _tasks if t["id"] != task_id]
+    if len(_tasks) == original_len:
+        raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+    return {"deleted": task_id}
+
+@app.patch("/api/tasks/{task_id}", response_model=Task)
+def toggle_task(task_id: str):
+    for task in _tasks:
+        if task["id"] == task_id:
+            task["completed"] = not task["completed"]
+            return task
+    raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
