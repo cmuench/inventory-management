@@ -3,7 +3,9 @@
     <!-- Section A: Budget Control -->
     <div class="page-header">
       <h2>Restocking Planner</h2>
-      <p>Allocate budget to restock high-demand items based on demand forecasts</p>
+      <p>
+        Allocate budget to restock high-demand items based on demand forecasts
+      </p>
     </div>
 
     <div class="card">
@@ -27,12 +29,17 @@
         <div class="budget-meta">
           <span class="meta-item">
             Remaining Budget:
-            <strong>{{ formatCurrency(recommendations.remaining_budget) }}</strong>
+            <strong>{{
+              formatCurrency(recommendations.remaining_budget)
+            }}</strong>
           </span>
           <span class="meta-separator">|</span>
           <span class="meta-item">
             Items Selected:
-            <strong>{{ selectedItems.length }} of {{ recommendations.items.length }}</strong>
+            <strong
+              >{{ selectedItems.length }} of
+              {{ recommendations.items.length }}</strong
+            >
           </span>
         </div>
       </div>
@@ -72,7 +79,9 @@
               :key="item.item_sku"
               class="row-selected"
             >
-              <td><strong>{{ item.item_sku }}</strong></td>
+              <td>
+                <strong>{{ item.item_sku }}</strong>
+              </td>
               <td>{{ item.item_name }}</td>
               <td>
                 <span :class="['badge', item.trend]">{{ item.trend }}</span>
@@ -83,8 +92,13 @@
             </tr>
 
             <!-- Separator row when there are over-budget items -->
-            <tr v-if="overBudgetItems.length > 0 && selectedItems.length > 0" class="separator-row">
-              <td colspan="6" class="separator-cell">— Items below exceed remaining budget —</td>
+            <tr
+              v-if="overBudgetItems.length > 0 && selectedItems.length > 0"
+              class="separator-row"
+            >
+              <td colspan="6" class="separator-cell">
+                — Items below exceed remaining budget —
+              </td>
             </tr>
 
             <!-- Over-budget items (greyed out) -->
@@ -93,7 +107,9 @@
               :key="item.item_sku"
               class="row-over-budget"
             >
-              <td><strong>{{ item.item_sku }}</strong></td>
+              <td>
+                <strong>{{ item.item_sku }}</strong>
+              </td>
               <td>{{ item.item_name }}</td>
               <td>
                 <span :class="['badge', item.trend]">{{ item.trend }}</span>
@@ -105,7 +121,9 @@
 
             <!-- No items at all -->
             <tr v-if="recommendations.items.length === 0">
-              <td colspan="6" class="empty-cell">No recommendations available</td>
+              <td colspan="6" class="empty-cell">
+                No recommendations available
+              </td>
             </tr>
           </tbody>
         </table>
@@ -127,9 +145,13 @@
         </div>
         <div class="success-detail">
           <span class="detail-label">Expected Delivery:</span>
-          <span class="detail-value">{{ formatDeliveryDate(lastOrder.expected_delivery) }}</span>
+          <span class="detail-value">{{
+            formatDeliveryDate(lastOrder.expected_delivery)
+          }}</span>
         </div>
-        <button class="btn-primary" @click="resetOrder">Place Another Order</button>
+        <button class="btn-primary" @click="resetOrder">
+          Place Another Order
+        </button>
       </div>
 
       <!-- Normal order action state -->
@@ -137,7 +159,12 @@
         <div class="order-summary-line">
           <span class="summary-count">{{ selectedItems.length }} items</span>
           <span class="summary-sep">|</span>
-          <span class="summary-total">Total: <strong>{{ formatCurrency(recommendations.total_selected) }}</strong></span>
+          <span class="summary-total"
+            >Total:
+            <strong>{{
+              formatCurrency(recommendations.total_selected)
+            }}</strong></span
+          >
         </div>
         <button
           class="btn-primary"
@@ -145,7 +172,7 @@
           :class="{ 'btn-disabled': submitting }"
           @click="placeOrder"
         >
-          {{ submitting ? 'Placing Order...' : 'Place Order' }}
+          {{ submitting ? "Placing Order..." : "Place Order" }}
         </button>
         <div v-if="orderError" class="error order-error">{{ orderError }}</div>
       </div>
@@ -154,76 +181,99 @@
 </template>
 
 <script>
-import { ref, computed, watch, onMounted } from 'vue'
-import { api } from '../api'
+import { ref, computed, watch, onMounted } from "vue";
+import { api } from "../api";
 
 export default {
-  name: 'Restocking',
+  name: "Restocking",
   setup() {
-    const budget = ref(50000)
-    const recommendations = ref({ items: [], budget: 0, total_selected: 0, remaining_budget: 0 })
-    const loading = ref(false)
-    const submitting = ref(false)
+    const budget = ref(50000);
+    const recommendations = ref({
+      items: [],
+      budget: 0,
+      total_selected: 0,
+      remaining_budget: 0,
+    });
+    const loading = ref(false);
+    const submitting = ref(false);
     // Holds the successfully placed order response, or null when in the normal state
-    const lastOrder = ref(null)
-    const orderError = ref(null)
+    const lastOrder = ref(null);
+    const orderError = ref(null);
 
-    const selectedItems = computed(() => recommendations.value.items.filter(i => i.selected))
-    const overBudgetItems = computed(() => recommendations.value.items.filter(i => !i.selected))
+    const selectedItems = computed(() =>
+      recommendations.value.items.filter((i) => i.selected),
+    );
+    const overBudgetItems = computed(() =>
+      recommendations.value.items.filter((i) => !i.selected),
+    );
 
     const formatCurrency = (value) =>
-      (value || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+      (value || 0).toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+      });
 
     const formatDeliveryDate = (dateStr) => {
-      if (!dateStr) return ''
-      const date = new Date(dateStr)
-      if (isNaN(date.getTime())) return dateStr
-      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-    }
+      if (!dateStr) return "";
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr;
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    };
 
     const fetchRecommendations = async () => {
       // Skip fetching when budget is 0 — the template shows the empty state instead
       if (budget.value === 0) {
-        recommendations.value = { items: [], budget: 0, total_selected: 0, remaining_budget: 0 }
-        return
+        recommendations.value = {
+          items: [],
+          budget: 0,
+          total_selected: 0,
+          remaining_budget: 0,
+        };
+        return;
       }
-      loading.value = true
+      loading.value = true;
       try {
-        recommendations.value = await api.getRestockingRecommendations(budget.value)
+        recommendations.value = await api.getRestockingRecommendations(
+          budget.value,
+        );
       } finally {
-        loading.value = false
+        loading.value = false;
       }
-    }
+    };
 
     const placeOrder = async () => {
-      submitting.value = true
-      orderError.value = null
+      submitting.value = true;
+      orderError.value = null;
       try {
-        const items = selectedItems.value.map(i => ({
+        const items = selectedItems.value.map((i) => ({
           item_sku: i.item_sku,
           item_name: i.item_name,
           quantity: i.forecasted_demand,
           unit_cost: i.unit_cost,
-          total_cost: i.total_cost
-        }))
-        lastOrder.value = await api.submitRestockingOrder(items)
+          total_cost: i.total_cost,
+        }));
+        lastOrder.value = await api.submitRestockingOrder(items);
       } catch (err) {
-        orderError.value = 'Failed to place order. Please try again.'
-        console.error('Order placement failed:', err)
+        orderError.value = "Failed to place order. Please try again.";
+        console.error("Order placement failed:", err);
       } finally {
-        submitting.value = false
+        submitting.value = false;
       }
-    }
+    };
 
     const resetOrder = () => {
       // Clear the success state and re-fetch so the user can place another order
-      lastOrder.value = null
-      orderError.value = null
-      fetchRecommendations()
-    }
+      lastOrder.value = null;
+      orderError.value = null;
+      fetchRecommendations();
+    };
 
-    watch(budget, fetchRecommendations)
-    onMounted(fetchRecommendations)
+    watch(budget, fetchRecommendations);
+    onMounted(fetchRecommendations);
 
     return {
       budget,
@@ -238,10 +288,10 @@ export default {
       formatDeliveryDate,
       fetchRecommendations,
       placeOrder,
-      resetOrder
-    }
-  }
-}
+      resetOrder,
+    };
+  },
+};
 </script>
 
 <style scoped>
