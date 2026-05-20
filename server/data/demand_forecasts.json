@@ -17,7 +17,7 @@
     "forecasted_demand": 152,
     "trend": "stable",
     "period": "Next 30 days",
-    "unit_cost": 87.50
+    "unit_cost": 87.5
   },
   {
     "id": "3",
@@ -37,7 +37,7 @@
     "forecasted_demand": 35,
     "trend": "decreasing",
     "period": "Next 30 days",
-    "unit_cost": 425.00
+    "unit_cost": 425.0
   },
   {
     "id": "5",
@@ -47,7 +47,7 @@
     "forecasted_demand": 950,
     "trend": "increasing",
     "period": "Next 30 days",
-    "unit_cost": 18.50
+    "unit_cost": 18.5
   },
   {
     "id": "6",
@@ -57,7 +57,7 @@
     "forecasted_demand": 121,
     "trend": "stable",
     "period": "Next 30 days",
-    "unit_cost": 162.00
+    "unit_cost": 162.0
   },
   {
     "id": "7",
@@ -77,7 +77,7 @@
     "forecasted_demand": 182,
     "trend": "stable",
     "period": "Next 30 days",
-    "unit_cost": 89.50
+    "unit_cost": 89.5
   },
   {
     "id": "9",
@@ -87,6 +87,6 @@
     "forecasted_demand": 96,
     "trend": "stable",
     "period": "Next 30 days",
-    "unit_cost": 198.00
+    "unit_cost": 198.0
   }
 ]
